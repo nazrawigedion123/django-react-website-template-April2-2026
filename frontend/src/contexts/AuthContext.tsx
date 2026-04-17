@@ -1,5 +1,5 @@
 import React, { createContext, useCallback } from 'react';
-import type { User } from '../types';
+import type { LoginCredentials, RegisterPayload, User } from '../types';
 import api from '../services/api';
 import { useUser } from '../hooks/auth/useUser';
 import { useLogin, useRegister } from '../hooks/auth/useAuthMutations';
@@ -10,8 +10,8 @@ interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (credentials: any) => Promise<void>;
-    register: (userData: any) => Promise<void>;
+    login: (credentials: LoginCredentials) => Promise<void>;
+    register: (userData: RegisterPayload) => Promise<void>;
     logout: () => void;
 }
 
@@ -31,11 +31,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         queryClient.removeQueries({ queryKey: queryKeys.auth.all });
     }, [queryClient]);
 
-    const login = async (credentials: any) => {
+    const login = async (credentials: LoginCredentials) => {
         await loginMutation.mutateAsync(credentials);
     };
 
-    const register = async (userData: any) => {
+    const register = async (userData: RegisterPayload) => {
         await registerMutation.mutateAsync(userData);
     };
 

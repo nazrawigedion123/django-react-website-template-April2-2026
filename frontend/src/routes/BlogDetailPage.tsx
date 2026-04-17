@@ -1,4 +1,6 @@
-import { Link, useParams } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { useLanguage } from "../contexts/LanguageContext";
@@ -89,8 +91,7 @@ function resolveSectionText(section: BlogSection, lang: string, defaultLangCode:
   };
 }
 
-export function BlogDetailPage() {
-  const { blogId } = useParams({ from: "/blog/$blogId" });
+export function BlogDetailPage({ blogId }: { blogId: string }) {
   const blogIdNum = Number(blogId);
   const { lang } = useLanguage();
   const { t } = useTranslation();
@@ -104,7 +105,6 @@ export function BlogDetailPage() {
   const [showCommentComposer, setShowCommentComposer] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState<Record<number, string>>({});
   const [openReplyFor, setOpenReplyFor] = useState<number | null>(null);
-  const [selectedReaction, setSelectedReaction] = useState<ReactionType | null>(null);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const longPressTimerRef = useRef<number | null>(null);
   const closePickerTimerRef = useRef<number | null>(null);
@@ -113,34 +113,18 @@ export function BlogDetailPage() {
   const defaultLangCode = languages.find((language) => language.default)?.code;
   const likeReaction = REACTION_OPTIONS[0];
   const extraReactions = REACTION_OPTIONS.slice(1);
+  const selectedReaction =
+    blog?.user_reaction && isReactionType(blog.user_reaction) ? blog.user_reaction : null;
   const currentReactionOption = selectedReaction
     ? REACTION_OPTIONS.find((option) => option.type === selectedReaction) ?? likeReaction
     : likeReaction;
   const hasSelectedReaction = selectedReaction !== null;
 
-  useEffect(() => {
-    if (!blog?.user_reaction) {
-      setSelectedReaction(null);
-      return;
-    }
-    if (isReactionType(blog.user_reaction)) {
-      setSelectedReaction(blog.user_reaction);
-      return;
-    }
-    setSelectedReaction(null);
-  }, [blog?.id, blog?.user_reaction]);
-
   const applyReaction = (reaction: ReactionType) => {
     if (!user) return;
     clearCloseReactionTimer();
     reactToBlog.mutate(reaction, {
-      onSuccess: (response) => {
-        const nextReaction = response.current_reaction;
-        if (nextReaction && REACTION_OPTIONS.some((option) => option.type === nextReaction)) {
-          setSelectedReaction(nextReaction as ReactionType);
-        } else {
-          setSelectedReaction(null);
-        }
+      onSuccess: () => {
         setShowReactionPicker(false);
       },
     });
@@ -225,7 +209,7 @@ export function BlogDetailPage() {
   return (
     <section className="space-y-4">
       <div>
-        <Link to="/blog" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+        <Link href="/blog" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
           {t("blog.back_to_list", "Back to blog list")}
         </Link>
       </div>

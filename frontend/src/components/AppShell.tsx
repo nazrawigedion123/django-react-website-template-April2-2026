@@ -1,6 +1,9 @@
-import { Link, Outlet, useNavigate } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -10,8 +13,8 @@ import { useUser } from "../hooks/auth/useUser";
 import { queryKeys } from "../lib/queryKeys";
 import api from "../services/api";
 
-export function AppShell() {
-  const navigate = useNavigate();
+export function AppShell({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { data: user } = useUser(!!api.getTokens());
   const { theme, toggleTheme } = useTheme();
@@ -33,14 +36,14 @@ export function AppShell() {
       <header className="border-b border-slate-200 dark:border-slate-800">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <nav className="flex items-center gap-4 text-sm">
-            <Link to="/" className="font-semibold">
+            <Link href="/" className="font-semibold">
               {t("nav.home", "Home")}
             </Link>
-            <Link to="/blog">{t("nav.blog", "Blog")}</Link>
-            <Link to="/gallery">{t("nav.gallery", "Gallery")}</Link>
-            <Link to="/about">{t("nav.about", "About")}</Link>
-            {user?.roles?.can_manage_settings || user?.roles?.can_manage_users ? (
-              <Link to="/dashboard">{t("nav.dashboard", "Dashboard")}</Link>
+            <Link href="/blog">{t("nav.blog", "Blog")}</Link>
+            <Link href="/gallery">{t("nav.gallery", "Gallery")}</Link>
+            <Link href="/about">{t("nav.about", "About")}</Link>
+            {isAuthenticated ? (
+              <Link href="/dashboard">{t("nav.dashboard", "Dashboard")}</Link>
             ) : null}
           </nav>
 
@@ -77,14 +80,14 @@ export function AppShell() {
                   api.logout();
                   queryClient.setQueryData(queryKeys.auth.user(), null);
                   await queryClient.invalidateQueries({ queryKey: queryKeys.auth.all });
-                  navigate({ to: "/login" });
+                  router.push("/login");
                 }}
                 className="rounded border border-slate-300 px-2 py-1 dark:border-slate-700"
               >
                 {t("auth.logout", "Logout")}
               </button>
             ) : (
-              <Link to="/login" className="rounded border border-slate-300 px-2 py-1 dark:border-slate-700">
+              <Link href="/login" className="rounded border border-slate-300 px-2 py-1 dark:border-slate-700">
                 {t("auth.login", "Login")}
               </Link>
             )}
@@ -93,7 +96,7 @@ export function AppShell() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">
-        <Outlet />
+        {children}
       </main>
     </div>
   );

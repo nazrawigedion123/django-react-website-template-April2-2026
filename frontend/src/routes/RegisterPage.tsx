@@ -1,10 +1,13 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
 
 import { useRegister } from "../hooks/auth/useAuthMutations";
 
 export function RegisterPage() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const registerMutation = useRegister();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +25,7 @@ export function RegisterPage() {
         first_name: firstName,
         last_name: lastName,
       });
-      navigate({ to: "/dashboard" });
+      router.push("/dashboard");
     } catch (_err) {
       setError("Registration failed.");
     }
@@ -63,7 +66,7 @@ export function RegisterPage() {
         </button>
       </form>
       <p className="mt-3 text-sm">
-        Have an account? <Link to="/login">Sign in</Link>
+        Have an account? <Link href="/login">Sign in</Link>
       </p>
     </section>
   );

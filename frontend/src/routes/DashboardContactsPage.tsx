@@ -1,3 +1,5 @@
+"use client";
+
 import { useUser } from "../hooks/auth/useUser";
 import { useDashboardContacts, useDashboardSubscribers } from "../hooks/content/useContacts";
 import api from "../services/api";

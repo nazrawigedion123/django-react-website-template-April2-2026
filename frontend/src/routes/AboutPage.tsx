@@ -1,3 +1,5 @@
+"use client";
+
 import { useTranslation } from "../hooks/i18n/useTranslation";
 
 export function AboutPage() {

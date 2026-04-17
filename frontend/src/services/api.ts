@@ -12,8 +12,10 @@ import type {
   GalleryPayload,
   HeroSection,
   LanguageOption,
+  LoginCredentials,
   LogoSection,
   Partner,
+  RegisterPayload,
   RegisterResponse,
   Social,
   SubscriberRecord,
@@ -28,10 +30,12 @@ import {
   PROTOBUF_CONTENT_TYPE,
 } from "../utils/protobufEnvelope";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
 const TOKENS_KEY = "auth_tokens";
 const LANG_KEY = "ui_lang";
-const API_TRANSPORT = (import.meta.env.VITE_API_TRANSPORT || (import.meta.env.DEV ? "json" : "protobuf")).toLowerCase();
+const API_TRANSPORT = (
+  process.env.NEXT_PUBLIC_API_TRANSPORT || (process.env.NODE_ENV === "development" ? "json" : "protobuf")
+).toLowerCase();
 const USE_PROTOBUF_BY_DEFAULT = API_TRANSPORT === "protobuf";
 const ACCEPT_HEADER = USE_PROTOBUF_BY_DEFAULT
   ? `${PROTOBUF_CONTENT_TYPE}, ${PROTOBUF_ALT_CONTENT_TYPE};q=0.95, application/json;q=0.9`
@@ -51,18 +55,20 @@ class ApiService {
   });
 
   constructor() {
-    const storedTokens = localStorage.getItem(TOKENS_KEY);
-    if (storedTokens) {
-      try {
-        this.tokens = JSON.parse(storedTokens) as AuthTokens;
-      } catch (_error) {
-        this.tokens = null;
+    if (typeof window !== "undefined") {
+      const storedTokens = window.localStorage.getItem(TOKENS_KEY);
+      if (storedTokens) {
+        try {
+          this.tokens = JSON.parse(storedTokens) as AuthTokens;
+        } catch (_error) {
+          this.tokens = null;
+        }
       }
-    }
 
-    const storedLang = localStorage.getItem(LANG_KEY);
-    if (storedLang) {
-      this.language = storedLang;
+      const storedLang = window.localStorage.getItem(LANG_KEY);
+      if (storedLang) {
+        this.language = storedLang;
+      }
     }
 
     this.client.interceptors.request.use((config) => {
@@ -126,10 +132,12 @@ class ApiService {
 
   setTokens(tokens: AuthTokens | null) {
     this.tokens = tokens;
+    if (typeof window === "undefined") return;
+
     if (tokens) {
-      localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens));
+      window.localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens));
     } else {
-      localStorage.removeItem(TOKENS_KEY);
+      window.localStorage.removeItem(TOKENS_KEY);
     }
   }
 
@@ -139,7 +147,9 @@ class ApiService {
 
   setLanguage(lang: string) {
     this.language = lang;
-    localStorage.setItem(LANG_KEY, lang);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(LANG_KEY, lang);
+    }
   }
 
   getLanguage(): string {
@@ -200,13 +210,13 @@ class ApiService {
     return this.refreshInProgress;
   }
 
-  async login(credentials: Record<string, unknown>): Promise<AuthResponse> {
+  async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const { data } = await this.client.post<AuthResponse>("/login/", credentials);
     this.setTokens({ access: data.access, refresh: data.refresh });
     return data;
   }
 
-  async register(userData: Record<string, unknown>): Promise<RegisterResponse> {
+  async register(userData: RegisterPayload): Promise<RegisterResponse> {
     const { data } = await this.client.post<RegisterResponse>("/users/", userData);
     if (data.access && data.refresh) {
       this.setTokens({ access: data.access, refresh: data.refresh });

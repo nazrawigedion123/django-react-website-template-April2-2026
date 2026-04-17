@@ -1,30 +1,34 @@
+"use client";
+
+import type { Route } from "next";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
 
 import { useGoogleLogin } from "../hooks/auth/useAuthMutations";
 
 export function GoogleCallbackPage() {
-  const navigate = useNavigate();
-  const location = useRouterState({ select: (s) => s.location });
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const googleLogin = useGoogleLogin();
   const processedRef = useRef(false);
+  const cancelledRoute = "/login?error=Google%20sign-in%20was%20cancelled%20or%20failed." as Route;
+  const failedRoute = "/login?error=Login%20failed.%20Please%20try%20again." as Route;
 
   useEffect(() => {
     if (processedRef.current) return;
 
-    const params = new URLSearchParams(location.searchStr);
-    const code = params.get("code");
-    const providerError = params.get("error");
+    const code = searchParams.get("code");
+    const providerError = searchParams.get("error");
     const codeVerifier =
       sessionStorage.getItem("pkce_verifier") || sessionStorage.getItem("google_code_verifier");
 
     if (providerError) {
-      navigate({ to: "/login", search: { error: "Google sign-in was cancelled or failed." } });
+      router.replace(cancelledRoute);
       return;
     }
 
     if (!code || !codeVerifier) {
-      navigate({ to: "/login" });
+      router.replace("/login");
       return;
     }
 
@@ -34,14 +38,14 @@ export function GoogleCallbackPage() {
       .then(() => {
         sessionStorage.removeItem("pkce_verifier");
         sessionStorage.removeItem("google_code_verifier");
-        navigate({ to: "/dashboard" });
+        router.replace("/dashboard");
       })
       .catch((error) => {
         console.error("Login failed:", error);
         processedRef.current = false; // Allow retry on failure if needed, though usually code is invalidated
-        navigate({ to: "/login", search: { error: "Login failed. Please try again." } });
+        router.replace(failedRoute);
       });
-  }, [googleLogin, location.searchStr, navigate]);
+  }, [cancelledRoute, failedRoute, googleLogin, router, searchParams]);
 
   return <p>Signing in with Google...</p>;
 }

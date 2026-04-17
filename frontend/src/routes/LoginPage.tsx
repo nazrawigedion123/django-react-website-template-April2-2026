@@ -1,36 +1,42 @@
+"use client";
+
+import type { Route } from "next";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 
 import { useLogin } from "../hooks/auth/useAuthMutations";
 import { generateCodeChallenge, generateCodeVerifier } from "../utils/pkce";
 
 const GOOGLE_CLIENT_ID = (
-  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-  import.meta.env.VITE_SOCIAL_AUTH_GOOGLE_CLIENT_ID ||
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
   ""
 ).trim();
 const GOOGLE_REDIRECT_URI = (
-  import.meta.env.VITE_GOOGLE_REDIRECT_URI ||
-  import.meta.env.VITE_GOOGLE_REDIRECT_URL ||
-  "http://localhost:5173/callback"
+  process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI ||
+  "http://localhost:3000/callback"
 ).trim();
 
 export function LoginPage() {
-  const navigate = useNavigate();
-  const location = useRouterState({ select: (s) => s.location });
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const loginMutation = useLogin();
-
-  const redirectTo = (location.search as Record<string, string> | undefined)?.redirect || "/dashboard";
+  const redirectParam = searchParams.get("redirect");
+  const providerError = searchParams.get("error");
+  const redirectTo =
+    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
+      ? (redirectParam as Route)
+      : "/dashboard";
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
     try {
       await loginMutation.mutateAsync({ email, password });
-      navigate({ to: redirectTo });
+      router.push(redirectTo);
     } catch (_err) {
       setError("Invalid credentials.");
     }
@@ -81,6 +87,7 @@ export function LoginPage() {
           placeholder="Password"
           className="w-full rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
         />
+        {providerError ? <p className="text-sm text-red-500">{providerError}</p> : null}
         {error ? <p className="text-sm text-red-500">{error}</p> : null}
         <button type="submit" className="rounded bg-slate-900 px-3 py-2 text-white dark:bg-slate-200 dark:text-slate-900">
           Login
@@ -95,7 +102,7 @@ export function LoginPage() {
       </button>
 
       <p className="mt-3 text-sm">
-        No account? <Link to="/register">Register</Link>
+        No account? <Link href="/register">Register</Link>
       </p>
     </section>
   );

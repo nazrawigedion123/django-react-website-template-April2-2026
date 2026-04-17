@@ -54,15 +54,15 @@ router.register(r'languages', LanguageViewSet, basename='language')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include(router.urls)),
-    path('api/google/login/', GoogleLoginView.as_view(), name='google_login'),
+    path('v1/', include(router.urls)),
+    path('v1/google/login/', GoogleLoginView.as_view(), name='google_login'),
     # JWT Auth:
-    path('api/login/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('v1/login/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # Swagger UI:
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('v1/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('v1/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('v1/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
 # Serve media files in development

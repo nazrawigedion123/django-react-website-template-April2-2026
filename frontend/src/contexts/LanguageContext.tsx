@@ -1,4 +1,6 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+"use client";
+
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import api from "../services/api";
@@ -14,13 +16,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [lang, setLangState] = useState<string>(api.getLanguage());
 
-  const setLang = (value: string) => {
+  const setLang = useCallback((value: string) => {
     api.setLanguage(value);
     setLangState(value);
     queryClient.invalidateQueries();
-  };
+  }, [queryClient]);
 
-  const value = useMemo(() => ({ lang, setLang }), [lang]);
+  const value = useMemo(() => ({ lang, setLang }), [lang, setLang]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

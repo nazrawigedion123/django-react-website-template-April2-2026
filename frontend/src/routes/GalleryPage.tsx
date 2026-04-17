@@ -1,3 +1,5 @@
+"use client";
+
 import { useGallery } from "../hooks/content/useGallery";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTranslation } from "../hooks/i18n/useTranslation";

@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+"use client";
+
+import { useMemo, useState, type FormEvent } from "react";
 
 import { useLanguage } from "../contexts/LanguageContext";
 import { useLanguages } from "../hooks/i18n/useLanguages";
@@ -96,36 +98,13 @@ export function DashboardSettingsPage() {
   const [faqTranslations, setFaqTranslations] = useState<FaqTranslationsMap>({});
 
   const [heroImage, setHeroImage] = useState<File | null>(null);
-  const [heroActive, setHeroActive] = useState(heroRows[0]?.active ?? true);
+  const [heroActiveOverride, setHeroActiveOverride] = useState<boolean | null>(null);
 
   const [logoImage, setLogoImage] = useState<File | null>(null);
-  const [logoActive, setLogoActive] = useState(logoRows[0]?.active ?? true);
+  const [logoActiveOverride, setLogoActiveOverride] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    if (languageCodes.length === 0) {
-      return;
-    }
-    setPartnerTranslations((prev) =>
-      Object.keys(prev).length ? prev : toPartnerTranslationMap([], languageCodes),
-    );
-    setFaqTranslations((prev) =>
-      Object.keys(prev).length ? prev : toFaqTranslationMap([], languageCodes),
-    );
-    setPartnerTab((prev) => prev || defaultLanguageCode);
-    setFaqTab((prev) => prev || defaultLanguageCode);
-  }, [defaultLanguageCode, languageCodes]);
-
-  useEffect(() => {
-    if (heroRows[0]) {
-      setHeroActive(heroRows[0].active);
-    }
-  }, [heroRows]);
-
-  useEffect(() => {
-    if (logoRows[0]) {
-      setLogoActive(logoRows[0].active);
-    }
-  }, [logoRows]);
+  const heroActive = heroActiveOverride ?? heroRows[0]?.active ?? true;
+  const logoActive = logoActiveOverride ?? logoRows[0]?.active ?? true;
 
   const resetSocialForm = () => {
     setSocialEdit(null);
@@ -250,10 +229,19 @@ export function DashboardSettingsPage() {
       payload.append("image", heroImage);
     }
     if (heroRows[0]) {
-      updateHero.mutate({ id: heroRows[0].id, payload }, { onSuccess: () => setHeroImage(null) });
+      updateHero.mutate({
+        id: heroRows[0].id,
+        payload,
+      }, { onSuccess: () => {
+        setHeroImage(null);
+        setHeroActiveOverride(null);
+      } });
       return;
     }
-    createHero.mutate(payload, { onSuccess: () => setHeroImage(null) });
+    createHero.mutate(payload, { onSuccess: () => {
+      setHeroImage(null);
+      setHeroActiveOverride(null);
+    } });
   };
 
   const onLogoSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -267,10 +255,19 @@ export function DashboardSettingsPage() {
       payload.append("image", logoImage);
     }
     if (logoRows[0]) {
-      updateLogo.mutate({ id: logoRows[0].id, payload }, { onSuccess: () => setLogoImage(null) });
+      updateLogo.mutate({
+        id: logoRows[0].id,
+        payload,
+      }, { onSuccess: () => {
+        setLogoImage(null);
+        setLogoActiveOverride(null);
+      } });
       return;
     }
-    createLogo.mutate(payload, { onSuccess: () => setLogoImage(null) });
+    createLogo.mutate(payload, { onSuccess: () => {
+      setLogoImage(null);
+      setLogoActiveOverride(null);
+    } });
   };
 
   return (
@@ -427,7 +424,7 @@ export function DashboardSettingsPage() {
           {heroRows[0]?.image ? <img src={heroRows[0].image} alt="Current hero" className="h-36 w-full rounded object-cover md:w-80" /> : null}
           <input type="file" accept="image/*" onChange={(e) => setHeroImage(e.target.files?.[0] ?? null)} />
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={heroActive} onChange={(e) => setHeroActive(e.target.checked)} />
+            <input type="checkbox" checked={heroActive} onChange={(e) => setHeroActiveOverride(e.target.checked)} />
             Active
           </label>
           <button type="submit" className="rounded bg-slate-900 px-3 py-2 text-sm text-white dark:bg-slate-200 dark:text-slate-900">
@@ -442,7 +439,7 @@ export function DashboardSettingsPage() {
           {logoRows[0]?.image ? <img src={logoRows[0].image} alt="Current logo" className="h-24 rounded object-contain" /> : null}
           <input type="file" accept="image/*" onChange={(e) => setLogoImage(e.target.files?.[0] ?? null)} />
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={logoActive} onChange={(e) => setLogoActive(e.target.checked)} />
+            <input type="checkbox" checked={logoActive} onChange={(e) => setLogoActiveOverride(e.target.checked)} />
             Active
           </label>
           <button type="submit" className="rounded bg-slate-900 px-3 py-2 text-sm text-white dark:bg-slate-200 dark:text-slate-900">

@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+"use client";
+
+import { useMemo, useState } from "react";
 
 import { useDashboardUsers, useUpdateDashboardUserRole } from "../hooks/content/useDashboardUsers";
 import type { Roles } from "../types";
@@ -36,27 +38,31 @@ const ROLE_LABELS: Record<EditableRoleField, string> = {
 export function DashboardUsersPage() {
   const { data = [], isLoading, error } = useDashboardUsers();
   const updateRole = useUpdateDashboardUserRole();
-  const [drafts, setDrafts] = useState<Record<number, Partial<Roles>>>({});
+  const [draftEdits, setDraftEdits] = useState<Record<number, Partial<Roles>>>({});
 
-  useEffect(() => {
-    const initial: Record<number, Partial<Roles>> = {};
-    data.forEach((user) => {
-      initial[user.id] = {
-        can_create_blog: Boolean(user.roles.can_create_blog),
-        can_edit_blog: Boolean(user.roles.can_edit_blog),
-        can_delete_blog: Boolean(user.roles.can_delete_blog),
-        can_publish_blog: Boolean(user.roles.can_publish_blog),
-        can_manage_users: Boolean(user.roles.can_manage_users),
-        can_create_media: Boolean(user.roles.can_create_media),
-        can_edit_media: Boolean(user.roles.can_edit_media),
-        can_delete_media: Boolean(user.roles.can_delete_media),
-        can_manage_subscribers: Boolean(user.roles.can_manage_subscribers),
-        can_manage_contacts: Boolean(user.roles.can_manage_contacts),
-        can_manage_settings: Boolean(user.roles.can_manage_settings),
-      };
-    });
-    setDrafts(initial);
-  }, [data]);
+  const drafts = useMemo(
+    () =>
+      Object.fromEntries(
+        data.map((user) => [
+          user.id,
+          {
+            can_create_blog: Boolean(user.roles.can_create_blog),
+            can_edit_blog: Boolean(user.roles.can_edit_blog),
+            can_delete_blog: Boolean(user.roles.can_delete_blog),
+            can_publish_blog: Boolean(user.roles.can_publish_blog),
+            can_manage_users: Boolean(user.roles.can_manage_users),
+            can_create_media: Boolean(user.roles.can_create_media),
+            can_edit_media: Boolean(user.roles.can_edit_media),
+            can_delete_media: Boolean(user.roles.can_delete_media),
+            can_manage_subscribers: Boolean(user.roles.can_manage_subscribers),
+            can_manage_contacts: Boolean(user.roles.can_manage_contacts),
+            can_manage_settings: Boolean(user.roles.can_manage_settings),
+            ...(draftEdits[user.id] ?? {}),
+          },
+        ]),
+      ) as Record<number, Partial<Roles>>,
+    [data, draftEdits],
+  );
 
   const sortedUsers = useMemo(
     () => [...data].sort((a, b) => a.email.localeCompare(b.email)),
@@ -86,7 +92,7 @@ export function DashboardUsersPage() {
                     type="checkbox"
                     checked={Boolean(role[field])}
                     onChange={(e) =>
-                      setDrafts((prev) => ({
+                      setDraftEdits((prev) => ({
                         ...prev,
                         [user.id]: { ...prev[user.id], [field]: e.target.checked },
                       }))

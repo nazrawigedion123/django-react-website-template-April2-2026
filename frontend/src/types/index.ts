@@ -35,10 +35,20 @@ export interface AuthTokens {
   refresh: string;
 }
 
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
 export interface AuthResponse {
   user: User;
   access: string;
   refresh: string;
+}
+
+export interface RegisterPayload extends LoginCredentials {
+  first_name: string;
+  last_name: string;
 }
 
 export interface RegisterResponse {

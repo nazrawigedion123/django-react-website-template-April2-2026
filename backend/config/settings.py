@@ -10,8 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
 
 from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
@@ -239,9 +239,17 @@ SPECTACULAR_SETTINGS = {
 }
 #
 # cors
+def _csv_env(name: str) -> list[str]:
+    value = os.getenv(name, "")
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    *_csv_env("CORS_ALLOWED_ORIGINS"),
 ]
 
 CORS_ALLOW_HEADERS = [

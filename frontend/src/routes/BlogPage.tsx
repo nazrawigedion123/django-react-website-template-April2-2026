@@ -1,4 +1,6 @@
-import { Link } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
 import { useBlogs } from "../hooks/content/useBlogs";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTranslation } from "../hooks/i18n/useTranslation";
@@ -77,7 +79,7 @@ export function BlogPage() {
               </p>
               <p className="text-sm text-slate-600 dark:text-slate-300">{resolved.content || t("blog.empty", "")}</p>
               <div className="mt-2">
-                <Link to="/blog/$blogId" params={{ blogId: String(blog.id) }} className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">
+                <Link href={`/blog/${blog.id}`} className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">
                   {t("blog.read_more", "Read more")}
                 </Link>
               </div>
